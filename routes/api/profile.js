@@ -10,6 +10,8 @@ const User = require("../../models/User");
 
 //load validation input
 const validateProfileInput = require("../../validation/profile");
+const validateExperienceInput = require("../../validation/experience");
+const validateEducationInput = require("../../validation/education.js");
 
 /**
  * @route   GET api/profile/test
@@ -169,24 +171,74 @@ router.post(
 );
 
 /**
- * @route   GET api/profile/test
- * @desc    tests profile route
- * @access  public
+ * @route   POST api/profile/experience
+ * @desc    add experience to profile
+ * @access  private
  */
-router.get("/test", (req, res) => res.json({ msg: "Profile work" }));
+router.post(
+  "/experience",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    console.log(req.body);
+    const { errors, isValid} = validateExperienceInput(req.body);
+
+    //check validation 
+    if(!isValid) {
+      //return any errors with 400 status
+      return res.status(400).json(errors);
+    }
+    Profile.findOne({ user: req.user.id }).then(profile => {
+      const newExp = {
+        title: req.body.title,
+        company: req.body.company,
+        location: req.body.location,
+        from: req.body.from,
+        to: req.body.to,
+        current: req.body.current,
+        description: req.body.description
+      };
+
+      //add to exp array
+      profile.experience.unshift(newExp);
+      profile.save().then(profile => res.json(profile));
+    });
+  }
+);
 
 /**
- * @route   GET api/profile/test
- * @desc    tests profile route
- * @access  public
+ * @route   POST api/profile/education
+ * @desc    add education to profile
+ * @access  private
  */
-router.get("/test", (req, res) => res.json({ msg: "Profile work" }));
+router.post(
+  "/education",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    console.log(req.body);
+    const { errors, isValid} = validateEducationInput(req.body);
 
-/**
- * @route   GET api/profile/test
- * @desc    tests profile route
- * @access  public
- */
-router.get("/test", (req, res) => res.json({ msg: "Profile work" }));
+    //check validation 
+    if(!isValid) {
+      //return any errors with 400 status
+      return res.status(400).json(errors);
+    }
+    Profile.findOne({ user: req.user.id }).then(profile => {
+      const newEdu = {
+        school: req.body.school,
+        degree: req.body.degree,
+        fieldOfStudy: req.body.fieldOfStudy,
+        from: req.body.from,
+        to: req.body.to,
+        current: req.body.current,
+        description: req.body.description
+      };
+
+      //add to exp array
+      profile.education.unshift(newEdu);
+      profile.save().then(profile => res.json(profile));
+    });
+  }
+);
+
 
 module.exports = router;
